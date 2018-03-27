@@ -5,7 +5,7 @@ public class ConversorNumerico {
 	/*
 	 * Retorna o binario (em complemento de dois) de um inteiro em decimal
 	 */
-	public static int[] decimalParaBinario(int decimal) {
+	public static int[] decimalParaBinario(int decimal) throws OverflowException{
 		boolean negativo = false;		
 		if(decimal < 0) {
 			negativo = true;
@@ -20,6 +20,8 @@ public class ConversorNumerico {
 			potencia *= 2;
 			soma += potencia;
 		}
+
+		if(expoente + 2 > Inteiro.BITS_INTEIRO) throw new OverflowException("Overflow");
 
 		// Incrementa 1 para ajustar o vetor de acordo com o expoente e mais 1 para o bit de sinal
 		int[] binario = new int[expoente + 2];
