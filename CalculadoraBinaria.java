@@ -6,6 +6,8 @@ import numero.Inteiro;
 import numero.Float;
 import numero.ConversorNumerico;
 
+import numero.OverflowException;
+
 public class CalculadoraBinaria {
 
 	String menuOpcoes = "+----------------------+\n" +
@@ -20,7 +22,7 @@ public class CalculadoraBinaria {
 		System.out.print(this.menuOpcoes);
 	}
 
-	private int operar(Inteiro a, Inteiro b, int operacao) {
+	private int operar(Inteiro a, Inteiro b, int operacao) throws OverflowException {
 		switch(operacao) {
 			case 1: // Somar
 				return ConversorNumerico.binarioParaDecimal(Numero.somar(a, b));
@@ -41,7 +43,7 @@ public class CalculadoraBinaria {
 		return 0;
 	}
 
-	private int operar(Float a, Float b, int operacao) {
+	private int operar(Float a, Float b, int operacao) throws OverflowException {
 		switch(operacao) {
 			case 1: // Somar
 				return ConversorNumerico.binarioParaDecimal(Numero.somar(a, b));
@@ -97,6 +99,8 @@ public class CalculadoraBinaria {
 
 				try {
 
+					// Lembrar de tratar overflow na entrada
+
 					if(entradaNumerica.hasNextInt()) {
 						valor1 = entradaNumerica.nextInt();
 					} else {
@@ -119,12 +123,16 @@ public class CalculadoraBinaria {
 				}
 			} while(true);
 
-			if(operacaoInteiros)
-				// Operacao com inteiros
-				resultado = this.operar(new Inteiro((int)valor1), new Inteiro((int)valor2), opcao);
-			else
-				// Operacao com floats
-				resultado = this.operar(new Float((float)valor1), new Float((float)valor2), opcao);
+			try {
+				if(operacaoInteiros)
+					// Operacao com inteiros
+					resultado = this.operar(new Inteiro((int)valor1), new Inteiro((int)valor2), opcao);
+				else
+					// Operacao com floats
+					resultado = this.operar(new Float((float)valor1), new Float((float)valor2), opcao);
+			} catch(OverflowException oe) {
+				System.out.println("[!] Overflow: " + oe.getMessage());
+			}
 
 			System.out.println("Resultado: " + resultado); 
 
