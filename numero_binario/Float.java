@@ -19,7 +19,7 @@ public class Float extends NumeroBinario {
 	public static final int TAMANHO_EXPOENTE = Float.COMECO_MANTISSA - Float.COMECO_EXPOENTE;
 	public static final int TAMANHO_MANTISSA = Float.MAXIMO_BITS - Float.COMECO_MANTISSA;
 
-
+	public static final int BIAS = (int)Math.pow(2, Float.TAMANHO_EXPOENTE - 1) - 1;
 
 	/*
 	 * Cria um numero float distribuindo os bits de forma adequada.
@@ -68,7 +68,7 @@ public class Float extends NumeroBinario {
 	 * Cria um Float a partir de um outro float
 	 */
 	public Float(Float numero) {
-		int sinal = numero.bit(0);
+		int sinal = numero.sinal();
 
 		int[] expoente = new int[Float.TAMANHO_EXPOENTE];
 		for(int i = 0; i < expoente.length; i++) expoente[i] = numero.bit(i + Float.COMECO_EXPOENTE);
@@ -80,7 +80,14 @@ public class Float extends NumeroBinario {
 	}
 
 
-	
+
+	/*
+	 * Devolve o valor do bit de sinal
+	 */	
+	public int sinal() {
+		return super.binario[0];
+	}
+
 	/*
 	 * Devolve um vetor binario representando o expoente 
 	 */
@@ -210,7 +217,7 @@ public class Float extends NumeroBinario {
 		*/
 
 		// Se 'a' for negativo transforma a mantissa em complemento de dois considerando o sinal
-		if(a.bit(0) == 1) {
+		if(a.sinal() == 1) {
 			// Pega o complemento de 1 do valor (os bits de indice 0 e 1 que nao fazem parte da mantissa)
 			for(int i = 2; i < mantissaA.length; i++) mantissaA[i] = (mantissaA[i] + 1) % 2;
 			// Soma um
@@ -220,7 +227,7 @@ public class Float extends NumeroBinario {
 		}
 
 		// Se 'b' for negativo transforma a mantissa em complemento de dois considerando o sinal
-		if(b.bit(0) == 1) {
+		if(b.sinal() == 1) {
 			// Pega o complemento de 1 do valor (os bits de indice 0 e 1 que nao fazem parte da mantissa)
 			for(int i = 2; i < mantissaB.length; i++) mantissaB[i] = (mantissaB[i] + 1) % 2;
 			// Soma um
@@ -259,7 +266,7 @@ public class Float extends NumeroBinario {
 		while(somaMantissa[3] != 1) {
 			NumeroBinario.deslocarUmParaEsquerda(somaMantissa);
 			try {
-				NumeroBinario.subtrairUm(expoenteA); // expoenteA escolhido por padronizacao
+				NumeroBinario.subtrairUm(expoenteA, false); // expoenteA escolhido por padronizacao
 			} catch(OverflowException oe) {
 				throw new OverflowException("Underflow no expoente: " + oe.getMessage());
 			}
@@ -272,15 +279,65 @@ public class Float extends NumeroBinario {
 	}
 
 	public static Float subtrair(Float a, Float b) throws OverflowException {
-		// Mudar o sinal do "subtrahend"
-		return a;
+		// Inverte o sinal do segundo numero e efetua uma soma
+		return Float.somar(a, new Float((b.sinal()+1 % 2), b.expoente(), b.mantissa()));
 	}
 
 	public static Float multiplicar(Float a, Float b) throws OverflowException {
+		// Verifica se um dos numeros eh zero e retorna o outro caso seja
+		if(a.expoenteZero() && a.mantissaZero()) return new Float(b);
+		if(b.expoenteZero() && b.mantissaZero()) return new Float(a);
+
+		Inteiro expoente;
+
+		// Soma os expoentes
+		try {
+			expoente = Inteiro.somar(new Inteiro(a.expoente(), Float.TAMANHO_EXPOENTE + 1), new Inteiro(b.expoente(), Float.TAMANHO_EXPOENTE));
+		} catch(OverflowException oe) {
+			throw new OverflowException("Overflow no expoente: " + oe.getMessage());
+		}
+
+		// Subtrai a bias do expoente
+		Inteiro bias = ConversaoBinarioDecimal.decimalParaInteiroBinario(Float.BIAS);
+		try {
+			expoente = Inteiro.subtrair(expoente, bias);
+		} catch(OverflowException oe) {
+			throw new OverflowException("Underflow no expoente: " + oe.getMessage());
+		}
+
+		// Multiplica
+
+		// Normaliza
+
 		return a;
 	}
 
 	public static Float dividir(Float a, Float b) throws OverflowException {
+		// Verifica se um dos numeros eh zero e retorna o outro caso seja
+		if(a.expoenteZero() && a.mantissaZero()) return new Float(b);
+		if(b.expoenteZero() && b.mantissaZero()) return new Float(a);
+
+		Inteiro expoente;
+
+		// Soma os expoentes
+		try {
+			expoente = Inteiro.somar(new Inteiro(a.expoente(), Float.TAMANHO_EXPOENTE + 1), new Inteiro(b.expoente(), Float.TAMANHO_EXPOENTE));
+		} catch(OverflowException oe) {
+			throw new OverflowException("Overflow no expoente: " + oe.getMessage());
+		}
+
+		// Subtrai a bias do expoente
+		Inteiro bias = ConversaoBinarioDecimal.decimalParaInteiroBinario(Float.BIAS);
+		try {
+			expoente = Inteiro.subtrair(expoente, bias);
+		} catch(OverflowException oe) {
+			throw new OverflowException("Underflow no expoente: " + oe.getMessage());
+		}
+
+		// Divide
+
+		// Normaliza
+
 		return a;
 	}
 

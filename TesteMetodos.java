@@ -173,17 +173,22 @@ public class TesteMetodos {
 		int testes = 0;
 		int erros = 0;
 
-		numero_binario.Float resultado = new numero_binario.Float(new int[numero_binario.Float.MAXIMO_BITS]);
+		numero_binario.Float resultado;
+		int[] binarioA;
+		int[] binarioB;
+		int[] resultadoEsperado;
 
 		boolean errado;
 
 		for(int i = 0; i < vetorDeTeste.length; i++) {
 			errado = false;
-			try {
-				int[] binarioA = obterBits(vetorDeTeste[i][0]);
-				int[] binarioB = obterBits(vetorDeTeste[i][1]);
-				int[] resultadoEsperado = obterBits(vetorDeTeste[i][2]);
 
+			binarioA = obterBits(vetorDeTeste[i][0]);
+			binarioB = obterBits(vetorDeTeste[i][1]);
+			resultadoEsperado = obterBits(vetorDeTeste[i][2]);
+			resultado = new numero_binario.Float(new int[numero_binario.Float.MAXIMO_BITS]);
+
+			try {
 				switch(operacao) {
 					case 0:
 						resultado = numero_binario.Float.somar(new numero_binario.Float(binarioA), new numero_binario.Float(binarioB));
@@ -204,6 +209,8 @@ public class TesteMetodos {
 					default:
 						throw new IllegalArgumentException("Escolha uma operacao: 0, 1, 2 ou 3; nao " + operacao + "!!!!!!!");
 				}
+
+				System.out.println(ConversaoBinarioDecimal.binarioFloatParaDecimal(new numero_binario.Float(binarioA)) + " + " + ConversaoBinarioDecimal.binarioFloatParaDecimal(new numero_binario.Float(binarioB)) + " = " + ConversaoBinarioDecimal.binarioFloatParaDecimal(resultado));
 
 				if(!binariosIguais(resultado.bits(), resultadoEsperado)) {
 					errado = true;
@@ -241,6 +248,12 @@ public class TesteMetodos {
 
 		testarFloat(0, somaFloats);
 
+		int[] expoente = {1, 0, 0, 0, 0, 0, 0, 1};
+		int[] mantissa = {1, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0};
+
+		numero_binario.Float numero = new numero_binario.Float(1, expoente, mantissa);
+
+		//System.out.println(ConversaoBinarioDecimal.binarioParaFloat(numero));
 	}
 
 }

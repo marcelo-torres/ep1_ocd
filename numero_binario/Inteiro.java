@@ -51,6 +51,15 @@ public class Inteiro extends NumeroBinario {
 
 
 	/*
+	 * Devolve o valor do bit de sinal
+	 */	
+	public int sinal() {
+		return super.binario[0];
+	}
+
+
+
+	/*
 	 * ###########################################################
 	 * ################# OPERADORES ARITMETICOS ##################
 	 * ###########################################################
@@ -75,7 +84,7 @@ public class Inteiro extends NumeroBinario {
 
 		// Se o numero 'a' e o numero 'b' possuem o mesmo sinal, entao houve um 'overflow' se, e somente se, 
 		// o sinal do numero resultante da soma for diferente
-		if(a.bit(0) == b.bit(0) && a.bit(0) != c[0]) throw new OverflowException(""); 
+		if(a.sinal() == b.sinal() && a.sinal() != c[0]) throw new OverflowException(""); 
 
 		return new Inteiro(c, c.length);
 	}

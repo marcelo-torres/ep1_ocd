@@ -10,6 +10,8 @@ public class NumeroBinario {
 
 	protected int[] binario;
 
+
+
 	/*
 	 * Retorna a quantidade de bits usada para armazenar o numero
 	 */
@@ -114,7 +116,7 @@ public class NumeroBinario {
 		  overflow. No caso de o numero nao ser sinalizado assume-se que o numero eh positivo para poder realizar a operacao
 		  com complemento de dois.
 		*/
-		if((sinalizado && negativo && binario[0] == 0) || (!sinalizado && excesso == 1)) throw new OverflowException("Nao eh possivel decrementar uma unidade");
+		if((sinalizado && negativo && binario[0] == 0) || (!sinalizado && ((excesso + 1) % 2) == 1)) throw new OverflowException("Nao eh possivel decrementar uma unidade");
 	}
 
 	/*
