@@ -17,9 +17,19 @@ public class TesteMetodos {
 
 		return true;
 	}
+        
+        public static void imprimirInteiro(Inteiro inteiro) {
+            for(int i = 0; i < inteiro.tamanho(); i++) System.out.print(inteiro.bit(i));
+            System.out.println();
+        }
 
-	public static void imprimirNumeroBinario(numero_binario.NumeroBinario numero) {
-		for(int i = 0; i < numero.tamanho(); i++) System.out.print(numero.bit(i));
+	public static void imprimirFloat(numero_binario.Float numero) {
+                Inteiro expoente = numero.expoente();
+                Inteiro mantissa = numero.mantissa();
+                
+                System.out.print(mantissa.sinal());
+                for(int i = 1; i < expoente.tamanho(); i++) System.out.print(expoente.bit(i));
+		for(int i = 2; i < mantissa.tamanho(); i++) System.out.print(mantissa.bit(i));
 		System.out.println();
 	}
 
@@ -161,7 +171,7 @@ public class TesteMetodos {
 				testes++;
 
 				System.out.print(vetorDeTeste[i][0] + " + " + vetorDeTeste[i][1] + " = ");
-				imprimirNumeroBinario(resultado);
+				imprimirInteiro(resultado);
 				System.out.println("Errado? " + errado + "\t Erros: " + erros + "/" + testes + "\t Resultado esperado: " + vetorDeTeste[i][2] + "\n");
 			}
 		}
@@ -231,7 +241,7 @@ public class TesteMetodos {
 				testes++;
 
 				System.out.print(vetorDeTeste[i][0] + " + " + vetorDeTeste[i][1] + " = ");
-				imprimirNumeroBinario(resultado);
+				imprimirFloat(resultado);
 				System.out.println("Errado? " + errado + "\t Erros: " + erros + "/" + testes + "\t Resultado esperado: " + vetorDeTeste[i][2] + "\n");
 			}
 		}
@@ -251,7 +261,7 @@ public class TesteMetodos {
 		int[] expoente = {1, 0, 0, 0, 0, 0, 0, 1};
 		int[] mantissa = {1, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0};
 
-		numero_binario.Float numero = new numero_binario.Float(1, expoente, mantissa);
+		//numero_binario.Float numero = new numero_binario.Float(1, expoente, mantissa);
 
 		//System.out.println(ConversaoBinarioDecimal.binarioParaFloat(numero));
 	}
