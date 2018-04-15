@@ -175,10 +175,15 @@ public class Inteiro {
         // Sao iguais
         return false;
     }
-
-
     
-    
+     public void imprimir (){
+        
+        for (int i = 0; i<this.tamanho(); i++)
+            System.out.print(this.bit(i));
+        
+        System.out.print("\t");
+        
+    }
     
     
     /*
@@ -227,7 +232,7 @@ public class Inteiro {
         if(sinalAnterior == 1 && this.sinal() != sinalAnterior) throw new OverflowException("Nao eh possivel decrementar uma unidade");
     }
 
-
+    
     /*
      * Realiza a soma de dois binarios no formato de complemento de dois.
      */
@@ -250,12 +255,97 @@ public class Inteiro {
         return new Inteiro(c, c.length);
     }
 
-    public static Inteiro subtrair(Inteiro a, Inteiro b) throws OverflowException {
-        return a;
-    }
+    
+    /*
+     * Método de soma que ignora o overflow para auxiliar a multiplicacao
+    */
+    public static Inteiro somaAux (Inteiro a, Inteiro b){
+        
+        int [] soma = new int [a.tamanho()+1];
+        
+        // Excesso de uma soma (no caso de 1 + 1 excesso = 1)
+        int excesso = 0;
 
-    public static Inteiro multiplicar(Inteiro a, Inteiro b) throws OverflowException {
-        return a;
+        // Soma os bits
+        for(int i = a.tamanho() - 1; i > 0; i--) {
+            
+            soma[i+1] = (a.bit(i) + b.bit(i) + excesso) % 2;
+            excesso = (a.bit(i) + b.bit(i) + excesso) / 2;
+        }
+        
+        int [] aux = new int [a.tamanho()];
+        for (int i = 0; i < aux.length; i++){
+            
+            aux[i] = soma[i+1];
+            
+        }
+ 
+        
+        return new Inteiro(aux);
+    }
+    
+    
+    
+    
+    
+    public static Inteiro subtrair(Inteiro a, Inteiro b) throws OverflowException {
+        
+        //Pegando complemento de dois de b
+	Inteiro b_comp2 = new Inteiro (b);
+        b_comp2.complementoDeDois();  
+
+	//Somando a e b
+	return new Inteiro(somar(a,b_comp2));
+    }
+       
+
+   
+    
+    /*
+     * Realiza a multiplicação de dois binarios seguindo o algoritmo de Booth
+     */
+    public static Inteiro multiplicar(Inteiro M, Inteiro Q) throws OverflowException {
+              
+        // A variável 'A' deve ser inicializada com 0s
+        int [] aux = new int [M.tamanho()];
+        Inteiro A = new Inteiro (aux);
+        
+        int Q_1 = 0;
+        
+        
+        int contador = Q.tamanho();
+
+        while (contador>0) {
+                        
+            // Ultimo bit de Q é comparado com Q_1
+            if (Q.bit(Q.tamanho()-1) != Q_1){
+
+                if (Q_1 == 0)
+                    A = subtrair(A,M);
+                else 
+                    A = somaAux(A,M);
+
+            }
+            
+            // Deslocamento a direita de A, Q e Q_1
+            Q_1 = Q.bit(Q.tamanho()-1);
+            Q.deslocarUmParaDireita(A.bit(A.tamanho()-1));
+            A.deslocarUmParaDireita();
+            
+
+            contador--;
+        }    
+            
+        //O resultado será o conjunto de bits de A e Q
+        int [] produto = new int [Q.tamanho()+A.tamanho()];
+        for (int i = 0; i<A.tamanho(); i++)
+            produto[i] = A.bit(i);
+        for (int i = 0; i<Q.tamanho(); i++)
+            produto[i+Q.tamanho()] = Q.bit(i); 
+        
+        Inteiro prod = new Inteiro (produto);
+        
+        return prod;
     }
 
     public static Inteiro dividir(Inteiro a, Inteiro b) throws OverflowException {
