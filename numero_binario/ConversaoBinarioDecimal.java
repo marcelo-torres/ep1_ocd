@@ -48,7 +48,7 @@ public class ConversaoBinarioDecimal {
     /*
      * Tranforma um numero inteiro no sistema decimal em um numero binario inteiro
      */
-    public static Inteiro decimalInteiroParaInteiroBinario(int numero) throws OverflowException {
+    public static Inteiro decimalInteiroParaInteiroBinario(int numero, int numeroBits) throws OverflowException {
         boolean negativo = (numero < 0);
 
         // Transforma o numero em positivo
@@ -63,10 +63,11 @@ public class ConversaoBinarioDecimal {
             soma += potencia;
         }
 
+        if(expoente + 2 > numeroBits) throw new OverflowException("Eh necessario mais bits do que o indicado para criar o numero");
         if(expoente + 2 > Inteiro.MAXIMO_BITS) throw new OverflowException("Nao eh possivel converter o numero " + numero + " para binario, eh necessario mais do que " + Inteiro.MAXIMO_BITS + "bits");
 
         // Incrementa 1 para ajustar o vetor de acordo com o expoente e mais 1 para o bit de sinal
-        int[] binario = new int[expoente + 2];
+        int[] binario = new int[numeroBits];
 
         // Ajuda o bit de sinal
         binario[0] = (negativo ? 1 : 0);
