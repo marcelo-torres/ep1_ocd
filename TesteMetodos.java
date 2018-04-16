@@ -256,14 +256,30 @@ public class TesteMetodos {
 
 		// 1 10001110 10001110001000000000000
 
-		testarFloat(0, somaFloats);
+		//testarFloat(0, somaFloats);
 
-		int[] expoente = {1, 0, 0, 0, 0, 0, 0, 1};
-		int[] mantissa = {1, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0};
+		//int[] expoente = {1, 0, 0, 0, 0, 0, 0, 1};
+		//int[] mantissa = {1, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0};
 
 		//numero_binario.Float numero = new numero_binario.Float(1, expoente, mantissa);
 
 		//System.out.println(ConversaoBinarioDecimal.binarioParaFloat(numero));
+                
+                try {
+                    int numero_bits = 6;
+                    int numero_a = 31;
+                    int numero_b = 31;
+                    
+                    Inteiro a = ConversaoBinarioDecimal.decimalInteiroParaInteiroBinario(numero_a, numero_bits);
+                    Inteiro b = ConversaoBinarioDecimal.decimalInteiroParaInteiroBinario(numero_b, numero_bits);
+                    
+                    Inteiro c = Inteiro.multiplicar(a, b);
+                    
+                    System.out.println(ConversaoBinarioDecimal.binarioInteiroParaDecimal(c));
+                } catch(Exception e) {
+                    System.out.println(e.getMessage());
+                    e.printStackTrace();
+                }
 	}
 
 }
