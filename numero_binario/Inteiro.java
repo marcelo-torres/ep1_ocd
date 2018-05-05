@@ -142,6 +142,27 @@ public class Inteiro {
 
         return binarioDiferenteZero;
     }
+    
+    /*
+     * Desloca os bits do inteiro para a esquerda e coloca o bit indicado na primeira posicao
+     */
+    public boolean deslocarUmParaEsquerda(int bit) {
+        boolean binarioDiferenteZero = this.deslocarUmParaEsquerda();
+        this.binario[this.binario.length - 1] = bit;
+        return binarioDiferenteZero;
+    }
+    
+    /*
+     * Desloca o binario para a esquerda, perdendo o primeiro bit, 
+     * e colocando o bit indicado no parametro no espaço vazio 
+     */
+    public void deslocarEsquerdaAux (int bit){
+	
+	for (int i = 0; i<this.binario.length-1; i++)
+            this.binario[i] = this.binario[i+1];
+	this.binario[this.binario.length-1] = bit;
+	
+    }
 
     /*
      * Transforma o inteiro atual em complemento de dois
@@ -184,6 +205,10 @@ public class Inteiro {
         System.out.print("\t");
         
     }
+     
+     public void alteraUltimoBit(int bit){
+         this.binario[this.binario.length - 1] = bit;
+     }
     
     
     /*
@@ -331,8 +356,11 @@ public class Inteiro {
             contador--;
         }    
             
+        
         //O resultado será o conjunto de bits de A e Q
         int [] produto = new int [Q.tamanho()+A.tamanho()];
+        
+        if (produto.length > 32) throw new OverflowException("A multiplicação ultrapassa o limite do inteiro");
         
         for (int i = 0; i<A.tamanho(); i++)
             produto[i] = A.bit(i);
@@ -342,12 +370,53 @@ public class Inteiro {
         
         Inteiro prod = new Inteiro (produto);
 
-        
         return prod;
     }
 
-    public static Inteiro dividir(Inteiro a, Inteiro b) throws OverflowException {
-        return a;
+
+    public static Inteiro dividir(Inteiro Q, Inteiro M) throws OverflowException {
+
+	int [] aux = new int [Q.tamanho()];
+	Inteiro A = new Inteiro(aux);
+	int contador = Q.tamanho();
+	Inteiro zero = new Inteiro (aux); // será usado para comparacao
+
+    	/// TRATAMENTO DE CASOS NEGATIVOS 
+	boolean negativo = false;
+        
+	if (Q.menorDoQue(zero)){
+            Q.complementoDeDois();
+            negativo = true;
+	}
+
+	if (M.menorDoQue(zero)){
+            M.complementoDeDois();
+            negativo = true;
+	}
+
+	while (contador > 0){
+            
+            A.deslocarEsquerdaAux(Q.bit(0)); 
+            Q.deslocarEsquerdaAux(0);
+
+            A = subtrair(A,M);
+
+            if (A.menorDoQue(zero)) {
+                Q.alteraUltimoBit(0); //fazer ultimo bit de Q receber 0;
+                A = somar (A,M);
+            } else {
+                Q.alteraUltimoBit(1); //fazer ultimo bit de Q receber 1;
+            }
+
+            contador --;
+	}
+
+	if (negativo)
+            Q.complementoDeDois();
+        
+	return Q;
+
     }
+
 
 }
