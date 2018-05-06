@@ -22,8 +22,11 @@ public class Float {
     // Tamanho da mantissa incluindo os bits de valor, o bit de sinal e o bit mais siginificativo
     public static final int TAMANHO_MANTISSA = BITS_MANTISSA + 1; // 24 bits de valor, 1 bit de sinal
 
-    public static final int BIAS = (int)Math.pow(2, Float.BITS_EXPOENTE - 1) - 1; // BIAS = [(2^k) - 1], onde k = (numeros de bits) - 1
+    //public static final int BIAS = (int)Math.pow(2, Float.BITS_EXPOENTE - 1) - 1; // BIAS = [(2^k) - 1], onde k = (numeros de bits) - 1
 
+    public static final int BIAS = (int)Math.pow(2, Float.BITS_EXPOENTE - 1);
+    
+    
     private int sinal;
     private Inteiro expoente;
     private Inteiro mantissa;
@@ -273,61 +276,66 @@ public class Float {
 
     public static Float multiplicar(Float a, Float b) throws OverflowException {
         
-        
         // Verifica se um dos numeros eh zero e retorna o outro caso seja
         if(a.expoenteZero() && a.mantissaZero()) return new Float(b);
         if(b.expoenteZero() && b.mantissaZero()) return new Float(a);
 
+        // Verifica qual sera o sinal do produto
         int sinal = 1;
         if (a.sinal() == b.sinal()) sinal = 0;
         
-        
-        Inteiro somaExpoentes;
-        Inteiro expoente_a = new Inteiro (a.expoente.bits(), TAMANHO_EXPOENTE + 1); //passar Inteiro para vetor e criar novo inteiro com 1 bit a mais
-        Inteiro expoente_b = new Inteiro (b.expoente.bits(), TAMANHO_EXPOENTE + 1);
-
         //Soma os expoentes
+        Inteiro somaExpoentes;
+        Inteiro expoente_a = new Inteiro (a.expoente.bits(), TAMANHO_EXPOENTE + 1); //passa Inteiro para vetor e cria novo Inteiro com 1 bit a mais
+        Inteiro expoente_b = new Inteiro (b.expoente.bits(), TAMANHO_EXPOENTE + 1);
+   
         try {
-        somaExpoentes = Inteiro.somar(expoente_a, expoente_b);
+            //System.out.println("exp a: " + ConversaoBinarioDecimal.binarioInteiroParaDecimal(expoente_a));
+            somaExpoentes = Inteiro.somar(expoente_a, expoente_b);
         } catch(OverflowException oe) {
             throw new OverflowException("Overflow no expoente: " + oe.getMessage());
         }
-        
+
         //Subtrai a bias do expoente
         Inteiro bias = ConversaoBinarioDecimal.decimalInteiroParaInteiroBinario(Float.BIAS, somaExpoentes.tamanho());
+        Inteiro expoente;
         try {
             
             somaExpoentes = Inteiro.subtrair(somaExpoentes, bias);
+            
+            //Recupera o tamanho de 9 bits do expoente
+            int exp = ConversaoBinarioDecimal.binarioInteiroParaDecimal(somaExpoentes);
+            expoente = ConversaoBinarioDecimal.decimalInteiroParaInteiroBinario(exp, TAMANHO_EXPOENTE);
+            
         } catch(OverflowException oe) {
             throw new OverflowException("Underflow no expoente: " + oe.getMessage());
-        }
-        
+        }   
         
         // Multiplica as mantissas
-       
-       Inteiro mantissa; 
-        
-       
-            a.mantissa.imprimir();
-            b.mantissa.imprimir();
-            Inteiro mantissa_a = new Inteiro (a.mantissa());
-            Inteiro mantissa_b = new Inteiro (b.mantissa());
-            mantissa = Inteiro.multiplicar(mantissa_a, mantissa_b);
-       
-        
-
+        Inteiro mantissa;    
+        mantissa = Inteiro.multiplicar(a.mantissa(), b.mantissa());
         
         // Normaliza
         while(mantissa.bit(1) != 1) {
-                mantissa.deslocarUmParaEsquerda();
-                try {
-                    somaExpoentes.subtrairUm(); // expoenteA escolhido por padronizacao
-                } catch(OverflowException oe) {
-                        throw new OverflowException("Underflow no expoente: " + oe.getMessage());
-                }
+            mantissa.deslocarUmParaEsquerda();
+                
+            try {
+                expoente.subtrairUm();
+                    
+            } catch(OverflowException oe) {
+                throw new OverflowException("Underflow no expoente: " + oe.getMessage());
+            }
         }
-
-        return new Float (sinal, somaExpoentes, mantissa);
+        
+        // Corta os bits que sobraram da mantissa
+        int [] bitsMantissa = new int [TAMANHO_MANTISSA];
+        for(int i = 0; i<bitsMantissa.length; i++){
+            bitsMantissa[i] = mantissa.bit(i);
+        }
+        
+        Inteiro Mantissa = new Inteiro(bitsMantissa);
+        
+        return new Float (sinal, expoente, Mantissa);
     }
 
     public static Float dividir(Float a, Float b) throws OverflowException {
