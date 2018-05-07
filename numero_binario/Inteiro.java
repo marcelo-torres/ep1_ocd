@@ -7,7 +7,7 @@ package numero_binario;
 public class Inteiro {
 
     // Numero maximo de bits que pode ser usado para representar um inteiro
-    public static final int MAXIMO_BITS = 50;
+    public static final int MAXIMO_BITS = 64;
 
     private int[] binario;
 
@@ -236,6 +236,14 @@ public class Inteiro {
     public void alteraUltimoBit(int bit) {
         this.binario[this.binario.length - 1] = bit;
     }
+    
+    public void inverterBits() {
+        for(int i = 0; i < this.binario.length / 2; i++) {
+            int aux = this.binario[i];
+            this.binario[i] = this.binario[this.binario.length - 1 - i];
+            this.binario[this.binario.length - 1 -i] = aux;
+        }
+    }
 
     /*
      * ###########################################################
@@ -363,9 +371,9 @@ public class Inteiro {
             produto[i + Q.tamanho()] = Q.bit(i);
         }
 
-        if (produto.length > (M.tamanho() * 2)) {
+        /*if (produto.length > (M.tamanho() * 2)) {
             throw new OverflowException("A multiplicacao ultrapassa o limite do inteiro", new Inteiro(produto), -1); 
-        }
+        }*/
         
         Inteiro prod = new Inteiro(produto);
 
