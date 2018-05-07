@@ -22,9 +22,9 @@ public class Float {
     // Tamanho da mantissa incluindo os bits de valor, o bit de sinal e o bit mais siginificativo
     public static final int TAMANHO_MANTISSA = BITS_MANTISSA + 1; // 24 bits de valor, 1 bit de sinal
 
-    //public static final int BIAS = (int)Math.pow(2, Float.BITS_EXPOENTE - 1) - 1; // BIAS = [(2^k) - 1], onde k = (numeros de bits) - 1
+    public static final int BIAS = (int)Math.pow(2, Float.BITS_EXPOENTE - 1) - 1; // BIAS = [(2^k) - 1], onde k = (numeros de bits) - 1
 
-    public static final int BIAS = (int)Math.pow(2, Float.BITS_EXPOENTE - 1);
+    //public static final int BIAS = (int)Math.pow(2, Float.BITS_EXPOENTE - 1);
     
     
     private int sinal;
@@ -276,9 +276,10 @@ public class Float {
 
     public static Float multiplicar(Float a, Float b) throws OverflowException {
         
-        // Verifica se um dos numeros eh zero e retorna o outro caso seja
-        if(a.expoenteZero() && a.mantissaZero()) return new Float(b);
-        if(b.expoenteZero() && b.mantissaZero()) return new Float(a);
+        // Caso um dos numeros seja 0 o resultado da multiplicacao sera 0
+        if( (a.expoenteZero() && a.mantissaZero()) || (b.expoenteZero() && b.mantissaZero()) ) {
+            return new Float(0, new Inteiro(new int[9]), new Inteiro(new int[25])); // Retorna zero
+        }
 
         // Verifica qual sera o sinal do produto
         int sinal = 1;
@@ -313,15 +314,22 @@ public class Float {
         
         // Multiplica as mantissas
         Inteiro mantissa;    
-        mantissa = Inteiro.multiplicar(a.mantissa(), b.mantissa());
+        mantissa = Inteiro.multiplicar(a.mantissa(), b.mantissa());   
+        
+        /*
+          Como o bit de sinal dos multiplicandos (as mantissas, que sao positivas) valem 0, o produto delas
+          contera dois bits a mais na esquerda, que eh eliminado deslocando os bits para a esquerda duas.
+        */      
+        expoente.somarUm();
+        expoente.somarUm();
         
         // Normaliza
-        while(mantissa.bit(1) != 1) {
+        int j = 0;
+        while(mantissa.bit(1) != 1 && j < mantissa.tamanho()) {
             mantissa.deslocarUmParaEsquerda();
-                
+            j++;
             try {
                 expoente.subtrairUm();
-                    
             } catch(OverflowException oe) {
                 throw new OverflowException("Underflow no expoente: " + oe.getMessage());
             }
@@ -333,23 +341,128 @@ public class Float {
             bitsMantissa[i] = mantissa.bit(i);
         }
         
-        Inteiro Mantissa = new Inteiro(bitsMantissa);
+        // Cria uma mantissa com os bits mais significavos da outra mantissa
+        Inteiro mantissaCortada = new Inteiro(bitsMantissa);
         
-        return new Float (sinal, expoente, Mantissa);
+        // Ajusta a mantissa inteira
+        mantissa.deslocarUmParaDireita();
+        
+        // Arredonda
+        while(mantissa.bit(TAMANHO_MANTISSA) == 1) {
+            try {
+                mantissa.deslocarUmParaDireita();
+                mantissaCortada.somarUm();
+            } catch(OverflowException oe) {
+                throw new OverflowException("Overflow no expoente durante o arredondamento: " + oe.getMessage());
+            }
+        }
+        
+        return new Float(sinal, expoente, mantissaCortada);
     }
 
     public static Float dividir(Float a, Float b) throws OverflowException {
         
-        // Verifica se um dos numeros eh zero e retorna o outro caso seja
-        if(a.expoenteZero() && a.mantissaZero()) return new Float(b);
-        if(b.expoenteZero() && b.mantissaZero()) return new Float(a);
+        // Se o dividendo for 0 retorna 0 como resultado
+        if(a.expoenteZero() && a.mantissaZero()) {
+            return new Float(0, new Inteiro(new int[9]), new Inteiro(new int[25])); // Retorna zero
+        }
+        
+        // Se o divisor for 0, retorna infinito
+        if(b.expoenteZero() && b.mantissaZero()) {
+            int[] expoente = {0, 1, 1, 1, 1, 1, 1, 1, 1};
+            return new Float(a.sinal(), new Inteiro(expoente), new Inteiro(new int[25])); // Retorna infinito
+        }
+        
+        Inteiro bias = ConversaoBinarioDecimal.decimalInteiroParaInteiroBinario(Float.BIAS, TAMANHO_EXPOENTE);
+        
+        Inteiro expoente;
+        
+        try {
+            expoente = Inteiro.subtrair(a.expoente(), b.expoente());
+            expoente = Inteiro.somar(expoente, bias);
+        } catch(OverflowException oe) {
+            throw new OverflowException("Overflow ao somar os expoentes: " + oe.getMessage());
+        }
+        
+        int[] q = new int[TAMANHO_MANTISSA];
+        
+        Inteiro ax = a.mantissa();    
+        Inteiro bx = b.mantissa();
+        
+        int[] resto = new int[TAMANHO_MANTISSA];
+        
+        for(int i = 0; i < q.length; i++) {
+            if(ax.menorDoQue(bx)) {
+                q[i] = 0;
+            } else {
+                q[i] = 1;
+                ax = Inteiro.subtrair(ax, bx);
+            }
+            ax.deslocarUmParaEsquerda();
+        }
+        
+        Inteiro quociente = new Inteiro(q);
+        
+        System.out.print("DIVISAO ANTES DA NORMALIZACAO: ");
+        quociente.imprimir();
+        System.out.print("  Expoente:"); 
+        expoente.imprimir();
+        System.out.println();
+        
+        quociente.deslocarUmParaDireita(0);
+        //expoente.somarUm();
+        
+        // Normaliza
+        int k = 0;
+        while(quociente.bit(1) != 1 && k < quociente.tamanho()) {
+            quociente.deslocarUmParaEsquerda();
+            k++;
+            try {
+                expoente.subtrairUm(); 
+            } catch(OverflowException oe) {
+                    throw new OverflowException("Underflow no expoente: " + oe.getMessage());
+            }
+        }
+        
+        
+        while(ax.bit(1) == 1) {
+            try {
+                ax.deslocarUmParaEsquerda();
+                quociente.somarUm();
+            } catch(OverflowException oe) {
+                throw new OverflowException("Overflow no expoente durante o arredondamento: " + oe.getMessage());
+            }
+        }
+        //quociente.deslocarUmParaDireita(1);
+        //quociente.deslocarUmParaDireita(0);
+        
+        System.out.print("DIVISAO DPS DA NORMALIZACAO:   ");
+        quociente.imprimir();
+        System.out.print("  Expoente:"); 
+        expoente.imprimir();
+        System.out.println();
+        
+        return new Float ((a.sinal() != b.sinal() ? 1 : 0), expoente, quociente);
+    }
+    
+    /*public static Float dividir(Float a, Float b) throws OverflowException {
+        
+        // Se o dividendo for 0 retorna 0 como resultado
+        if(a.expoenteZero() && a.mantissaZero()) {
+            return new Float(0, new Inteiro(new int[9]), new Inteiro(new int[25])); // Retorna zero
+        }
+        
+        // Se o divisor for 0, retorna infinito
+        if(b.expoenteZero() && b.mantissaZero()) {
+            int[] expoente = {0, 1, 1, 1, 1, 1, 1, 1, 1};
+            return new Float(a.sinal(), new Inteiro(expoente), new Inteiro(new int[25])); // Retorna infinito
+        }
 
         Inteiro expoente;
 
         //Subtrai os expoentes
         try {
-            expoente = Inteiro.subtrair(new Inteiro(a.expoente.bits(), TAMANHO_EXPOENTE), new Inteiro(b.expoente.bits(), TAMANHO_EXPOENTE));
-            
+            expoente = Inteiro.subtrair(new Inteiro(a.expoente.bits(), TAMANHO_EXPOENTE), new Inteiro(b.expoente.bits(), TAMANHO_EXPOENTE)); 
         } catch(OverflowException oe) {
                 throw new OverflowException("Overflow no expoente: " + oe.getMessage());
         }
@@ -357,24 +470,29 @@ public class Float {
         // Soma a bias do expoente
         Inteiro bias = ConversaoBinarioDecimal.decimalInteiroParaInteiroBinario(Float.BIAS, expoente.tamanho());
         try {
-                expoente = Inteiro.somar(expoente, bias);
-                
+                expoente = Inteiro.somar(expoente, bias);             
         } catch(OverflowException oe) {
                 throw new OverflowException("Underflow no expoente: " + oe.getMessage());
         }
-
+        
         // Divide
         Inteiro divisao;
         try {
-            System.out.println(ConversaoBinarioDecimal.binarioInteiroParaDecimal(a.mantissa()));
-            System.out.println(ConversaoBinarioDecimal.binarioInteiroParaDecimal(b.mantissa()));
-            divisao = Inteiro.dividir(a.mantissa(), b.mantissa());
-            System.out.println(ConversaoBinarioDecimal.binarioInteiroParaDecimal(divisao));
-            
+            divisao = Inteiro.dividir(a.mantissa(), b.mantissa());           
         } catch (OverflowException oe) {
             throw new OverflowException("Underflow na divisao: " + oe.getMessage());
         }
+        
+        System.out.print("DIVISAO ANTES DA NORMALIZACAO: ");
+        divisao.imprimir();
+        System.out.print("  Expoente:"); 
+        expoente.imprimir();
+        System.out.println();
 
+        int[] q = new int[TAMANHO_MANTISSA];
+        
+       
+        
         // Normaliza
         while(divisao.bit(1) != 1) {
             divisao.deslocarUmParaEsquerda();
@@ -384,8 +502,25 @@ public class Float {
                     throw new OverflowException("Underflow no expoente: " + oe.getMessage());
             }
         }
-        return new Float (0, expoente, divisao);
-    }
+        
+        System.out.print("DIVISAO DPS DA NORMALIZACAO: ");
+        divisao.imprimir();
+        System.out.print("  Expoente:"); 
+        expoente.imprimir();
+        System.out.println();
+        
+        // Arredonda
+        while(mantissa.bit(TAMANHO_MANTISSA) == 1) {
+            try {
+                mantissa.deslocarUmParaDireita();
+                Mantissa.somarUm();
+            } catch(OverflowException oe) {
+                throw new OverflowException("Overflow no expoente durante o arredondamento: " + oe.getMessage());
+            }
+        }
+        
+        return new Float ((a.sinal() != b.sinal() ? 1 : 0), expoente, divisao);
+    }*/
 
 
 }
